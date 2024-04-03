@@ -1,0 +1,98 @@
+---
+- name: Deploy Open source app using Apache
+  hosts: all
+  become: true
+
+  tasks:
+    - name: Install Git
+      package:
+        name: git
+        state: present
+        when: ansible_distribution == 'Ubuntu'
+          
+    - name: Install Git 
+      package: 
+      name: git
+      state: present
+      when: ansible_distribution == 'CentOs'
+
+    - name: Clone GithHub repository
+      git:
+        repo: https://github.com/kayceecross/Alschool-Assignment-1
+        dest: /var/www/html/index.html
+        clone_depth: 1
+        when: ansible_distibution == 'Ubuntu'
+
+    - name: Clone GitHub Repository
+      git:
+        repo: https://github.com/kayceecross/Alschool-Assignment-1 
+        dest: /var/www/html/index.html
+        clone_depth: 1
+        when: ansible_distribution == 'CentOS'
+
+      - name: Install Apache web server
+      package:
+        name: "{{ apache_package }}"
+        state: present
+        vars:
+          apache_package: "apache2"
+          when: ansible_distribution == 'Ubuntu'
+
+         - name: Install Apache web server
+          package:
+            name: "{{ apache_package }}"
+            state: present
+            vars:
+              apache_package: "httpd"
+              when: ansible_distribution == 'CentOS'
+
+         - name: Configure Apache to serve the webpage
+           template:
+             src: apache.conf.j2
+             dest: "{{ apache_conf_path }}"
+             vars:
+               apache_conf_path: /etc/apache/sites-available/index.html
+               notify:
+                 - Restart Apache
+
+                 - name: Configure Apache to serve the webpage
+                   template:
+                     src: apache.conf.j2
+                     dest: "{{ apache_conf_path }}"
+                     vars:
+                       apache_conf_path: /etc/httpd/conf.d/index.html
+                       notify:
+                      - Restart Apache
+
+                      - name: Enable the site
+                        command: a2ensite index.html
+                        notify:
+                          - Restart Apache
+                        when: ansible_disstribution =='Ubuntu'
+
+                      - name: Enable the site
+                        command: systemctl enable httpd
+                        notify:
+                          - Restart Apache
+                        when: ansible_distribution == 'CentOS'
+
+                        handlers:
+                          -name: Restart Apache
+                          service:
+                            name: "{{ apache_service }}"
+                            state: restarted
+                            vars:
+                              apache_service: "apache2"
+                              when: ansible_distribution == 'Ubuntu'
+
+                        -name: Restart Apache
+                        service:
+                          name: "{{ apache_service }}"
+                          state: restarted
+                          vars:
+                            apache_service: "httpd"
+                            when: ansible_distribution == 'CentOS'
+
+
+
+
